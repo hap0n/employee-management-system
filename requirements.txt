@@ -1,0 +1,15 @@
+python-dotenv
+python-multipart
+fastapi
+uvicorn
+aiofiles
+aiobotocore
+pytest-asyncio
+alembic
+asyncpg
+psycopg2-binary
+itsdangerous
+passlib
+PyPika
+starlette-prometheus
+prometheus-client
