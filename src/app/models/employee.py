@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
 
 
 class Employee(BaseModel):
@@ -10,7 +12,8 @@ class Employee(BaseModel):
     gender: bool
     email: str
     salary: int
-    reports_to: int
     position: str
-    # TODO: add location
     hired_on: datetime
+    # TODO: add location
+
+    reports_to: Optional[int] = None
