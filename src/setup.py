@@ -1,7 +1,7 @@
 from os import path
 from typing import List
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 try:  # for pip >= 10
     from pip._internal.req import parse_requirements
@@ -19,15 +19,15 @@ def extract_requirements(requirements_file: str) -> List[str]:
         return [str(line.requirement) for line in requirements]
 
 
-requirements = extract_requirements("requirements.txt")
-dev_requirements = extract_requirements("requirements.dev.txt")
+requirements = extract_requirements("../requirements.txt")
+dev_requirements = extract_requirements("../requirements.dev.txt")
 
 
 setup(
-    name="annotation-tool",
+    name="employee-system",
     version="0.0.1",
-    package_dir={"": "src"},
-    packages=find_packages(where="src"),
+    package_dir={"": "backend"},
+    packages=find_packages(where="backend"),
     install_requires=requirements,
     tests_require=dev_requirements,
     extras_require={"dev": dev_requirements},
