@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+#  emp-ui:
+#    image: "ds/employee-system-ui"
+
+  emp-sys:
+    image: "ds/employee-system"
+    build:
+      context: .
+      dockerfile: "dockerfiles/api.dockerfile"
+      target: "app-dev"
+    command: ["bash", "run_dev.sh"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./:/app/"
+    env_file: ".env"
+    depends_on:
+      - "postgres"
+    environment:
+      - "ENV_FILE=.env"
+
+  postgres:
+    image: "library/postgres:13.4-alpine"
+    ports:
+      - "5432:5432"
+    environment:
+      - "POSTGRES_DB=emp_sys"
+      - "POSTGRES_USER=postgres"
+      - "POSTGRES_PASSWORD=postgres"
