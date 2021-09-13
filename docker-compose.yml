@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.8'
 
 services:
   backend:
@@ -9,8 +9,8 @@ services:
       - ./backend:/app
     command: [ 'python', 'main.py' ]
 
-frontend:
-    build: ./frontend
-
-database:
-    image: postgres
+#frontend:
+#    build: ./frontend
+#
+#database:
+#    image: postgres
