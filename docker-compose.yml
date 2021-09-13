@@ -1,16 +1,28 @@
 version: '3.8'
 
 services:
-  backend:
-    build: ./backend
+  emp-sys:
+    image: "ds/employee-management-system"
+    build:
+      context: .
+      dockerfile: "dockerfiles/api.dockerfile"
+      target: "app-dev"
+    command: "bash run_dev.sh"
     ports:
-      - '8080:8080'
+      - "8080:8080"
     volumes:
-      - ./backend:/app
-    command: [ 'python', 'main.py' ]
+      - "./:/app/"
+    env_file: ".env"
+    depends_on:
+      - "postgres"
+    environment:
+      - "ENV_FILE=.env"
 
-#frontend:
-#    build: ./frontend
-#
-#database:
-#    image: postgres
+  postgres:
+    image: "postgres:11.5-alpine"
+    ports:
+      - "5432:5432"
+    environment:
+      - "POSTGRES_DB=emp_sys"
+      - "POSTGRES_USER=postgres"
+      - "POSTGRES_PASSWORD=postgres"
