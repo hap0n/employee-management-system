@@ -24,7 +24,7 @@ dev_requirements = extract_requirements("requirements.dev.txt")
 
 
 setup(
-    name="annotation-tool",
+    name="employee-management-system",
     version="0.0.1",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
