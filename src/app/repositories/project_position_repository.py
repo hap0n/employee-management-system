@@ -16,33 +16,37 @@ class ProjectPositionRepository(BaseRepository):
     @classmethod
     def record_to_entity(cls, record):
         project_position = ProjectPosition(
-            id=record["id"],
-            position_id=record["position_id"],
-            reports_to=record["reports_to"],
+            id=record["id"], position_id=record["position_id"], reports_to=record["reports_to"],
         )
         return project_position
 
     @classmethod
-    async def _save(cls, connection, project_position: ProjectPosition):
-        records = await connection.fetchrow(
-            f"INSERT INTO {cls.TABLE_NAME} (position_id, reports_to) VALUES ($1, $2) RETURNING *",
-            project_position.position_id,
-            project_position.reports_to,
-        )
-        return records
+    async def upsert(cls, project_positions: ProjectPosition):
+        async with db_connection() as connection:
+            record = await connection.fetchrow(
+                f"""
+                        INSERT INTO {cls.TABLE_NAME}
+                        (position_id, reports_to)
+                        VALUES ($1, $2)
+                        ON CONFLICT (id) DO UPDATE SET
+                            position_id = EXCLUDED.position_id,
+                            reports_to = EXCLUDED.reports_to
+                        RETURNING *
+                        """,
+                *cls.model_to_tuple(project_positions),
+            )
+
+        return cls.record_to_entity(record)
 
     @classmethod
-    async def _update(cls, connection, project_position: ProjectPosition):
-        records = await connection.fetchrow(
-            f"UPDATE {cls.TABLE_NAME} SET position_id=$2, reports_to=$3 WHERE id=$1 RETURNING *",
-            project_position.id,
-            project_position.position_id,
-            project_position.reports_to,
+    def model_to_tuple(cls, model):
+        return (
+            model.position_id,
+            model.reports_to,
         )
-        return records
 
     @classmethod
     async def get_children_positions(cls, position_id) -> List[ProjectPosition]:
         async with db_connection() as connection:
-            records = await connection.fetchall(f"SELECT * FROM {cls.TABLE_NAME} WHERE reports_to = {position_id}")
+            records = await connection.fetch(f"SELECT * FROM {cls.TABLE_NAME} WHERE reports_to = {position_id}")
         return [cls.record_to_entity(record) for record in records]

@@ -12,7 +12,7 @@ class TeamDivisionRepository:
     @classmethod
     async def get_division_teams(cls, team_id: int) -> List[Team]:
         async with db_connection() as connection:
-            records = await connection.fetchall(
+            records = await connection.fetch(
                 f"""
                 SELECT
                     t.id as id,

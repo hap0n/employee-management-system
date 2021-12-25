@@ -41,13 +41,13 @@ async def search_divisions(
     return divisions
 
 
-@division_router.put("/update", response_model=Division, tags=["Division"])
+@division_router.post("/update", response_model=Division, tags=["Division"])
 async def update_position(division: Division):
-    division = await DivisionRepository.update(division)
+    division = await DivisionRepository.upsert(division)
     return division
 
 
-@division_router.post("/create", response_model=Division, tags=["Division"])
+@division_router.put("/create", response_model=Division, tags=["Division"])
 async def create_position(division: Division):
-    division = await DivisionRepository.save(division)
+    division = await DivisionRepository.upsert(division)
     return division

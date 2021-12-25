@@ -27,15 +27,15 @@ async def get_holidays_between(start_date: date, end_date: date) -> List[Holiday
     return holidays
 
 
-@holiday_router.put("/update", response_model=Holiday, tags=["Holiday"])
+@holiday_router.post("/update", response_model=Holiday, tags=["Holiday"])
 async def update_holiday(holiday: Holiday):
-    holiday = await HolidayRepository.update(holiday)
+    holiday = await HolidayRepository.upsert(holiday)
     return holiday
 
 
-@holiday_router.post("/create", response_model=Holiday, tags=["Holiday"])
+@holiday_router.put("/create", response_model=Holiday, tags=["Holiday"])
 async def create_holiday(holiday: Holiday):
-    holiday = await HolidayRepository.save(holiday)
+    holiday = await HolidayRepository.upsert(holiday)
     return holiday
 
 

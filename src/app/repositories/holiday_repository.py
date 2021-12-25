@@ -15,21 +15,29 @@ class HolidayRepository(BaseRepository):
     TABLE = Table(TABLE_NAME)
 
     @classmethod
-    async def _save(cls, connection, holiday: Holiday):
-        records = await connection.execute(
-            f"INSERT INTO {cls.TABLE_NAME} (name, date) VALUES ($1, $2) RETURNING *", holiday.name, holiday.date,
-        ).fetchrow()
-        return records
+    async def upsert(cls, holiday: Holiday):
+        async with db_connection() as connection:
+            record = await connection.fetchrow(
+                f"""
+                    INSERT INTO {cls.TABLE_NAME}
+                    (date, name)
+                    VALUES ($1, $2)
+                    ON CONFLICT (id) DO UPDATE SET
+                        date = EXCLUDED.date,
+                        name = EXCLUDED.name
+                    RETURNING *
+                    """,
+                *cls.model_to_tuple(holiday),
+            )
+
+        return cls.record_to_entity(record)
 
     @classmethod
-    async def _update(cls, connection, holiday: Holiday):
-        records = await connection.execute(
-            f"UPDATE {cls.TABLE_NAME} SET name=$2, date=$3 WHERE id=$1 RETURNING *",
-            holiday.id,
-            holiday.name,
-            holiday.date,
-        ).fetchrow()
-        return records
+    def model_to_tuple(cls, model):
+        return (
+            model.date,
+            model.name,
+        )
 
     @classmethod
     async def delete(cls, id: int) -> bool:
@@ -43,12 +51,10 @@ class HolidayRepository(BaseRepository):
         async with db_connection() as connection:
             records = await connection.execute(
                 f"SELECT * FROM {cls.TABLE_NAME} WHERE date > $1 AND date < $2", start_date, end_date
-            ).fetchall()
+            ).fetch()
         return [cls.record_to_entity(record) for record in records]
 
     @classmethod
     def record_to_entity(cls, record) -> Holiday:
-        holiday = cls.ENTITY(
-            id=record["id"], date=record["date"], name=record["name"]
-        )
+        holiday = cls.ENTITY(id=record["id"], date=record["date"], name=record["name"])
         return holiday

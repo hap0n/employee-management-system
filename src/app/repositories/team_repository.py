@@ -23,7 +23,7 @@ class TeamRepository(BaseRepository):
             status=record["status"],
             name=record["name"],
             lead_id=record["lead_id"],
-            division_id=record["division_id"],
+            team_id=record["team_id"],
         )
         return team
 
@@ -47,23 +47,41 @@ class TeamRepository(BaseRepository):
             return teams
 
     @classmethod
-    async def _save(cls, connection, team: Team):
-        records = await connection.fetchrow(
-            f"INSERT INTO {cls.TABLE_NAME} (status, name, lead_id, division_id) VALUES ($1, $2, $3, $4) RETURNING *",
-            team.status,
-            team.name,
-            team.lead_id,
-            team.division_id,
-        )
-        return records
+    async def upsert(cls, team: Team):
+        async with db_connection() as connection:
+            record = await connection.fetchrow(
+                f"""
+                        INSERT INTO {cls.TABLE_NAME}
+                        (status, name, lead_id, division_id)
+                        VALUES ($1, $2, $3, $4)
+                        ON CONFLICT (id) DO UPDATE SET
+                            status = EXCLUDED.status,
+                            name = EXCLUDED.name,
+                            lead_id = EXCLUDED.lead_id,
+                            division_id = EXCLUDED.division_id
+                        RETURNING *
+                        """,
+                *cls.model_to_tuple(team),
+            )
+
+        return cls.record_to_entity(record)
 
     @classmethod
-    async def _update(cls, connection, team: Team):
-        records = await connection.fetchrow(
-            f"UPDATE {cls.TABLE_NAME} SET status=$2, name=$3, lead_id=$4, division_id=$5 WHERE id=$1 RETURNING *",
-            team.id,
-            team.status,
-            team.name,
-            team.lead_id,
+    def model_to_tuple(cls, model):
+        return (
+            model.status,
+            model.name,
+            model.lead_id,
+            model.division_id,
         )
-        return records
+
+    @classmethod
+    def record_to_entity(cls, record) -> Team:
+        team = cls.ENTITY(
+            id=record["id"],
+            status=record["status"],
+            name=record["name"],
+            lead_id=record["lead_id"],
+            division_id=record["division_id"],
+        )
+        return team

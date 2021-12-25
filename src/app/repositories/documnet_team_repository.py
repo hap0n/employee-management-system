@@ -11,7 +11,7 @@ class DocumentTeamRepository:
     @classmethod
     async def get_team_docs(cls, team_id: int) -> List[int]:
         async with db_connection() as connection:
-            records = await connection.fetchall(
+            records = await connection.fetch(
                 f"""
                 SELECT d.id as id
                 FROM {cls.TEAM_TABLE_NAME} t 

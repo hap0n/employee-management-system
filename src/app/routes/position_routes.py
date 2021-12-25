@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import List, Optional
 
-from app.models.project_position_model import ProjectPosition
-from app.models.internal_position_model import InternalPosition
 from fastapi import APIRouter
-from typing import List
+
+from app.models.internal_position_model import InternalPosition
 from app.models.position_model import Position, PositionType
+from app.models.project_position_model import ProjectPosition
 from app.repositories.internal_position_repository import InternalPositionRepository
 from app.repositories.position_repository import PositionRepository
 from app.repositories.project_position_repository import ProjectPositionRepository
@@ -43,15 +43,39 @@ async def positions(position_id: int) -> Optional[Position]:
     return position
 
 
-@position_router.put("/position/update", response_model=Position, tags=["Positions"])
+@position_router.post("/position/update", response_model=Position, tags=["Positions"])
 async def update_position(position: Position):
-    position = await PositionRepository.update(position)
+    position = await PositionRepository.upsert(position)
     return position
 
 
-@position_router.post("/position/create", response_model=Position, tags=["Positions"])
+@position_router.put("/position/create", tags=["Positions"])
 async def create_position(position: Position):
-    position = await PositionRepository.save(position)
+    position = await PositionRepository.upsert(position)
+    return position
+
+
+@position_router.post("/project-position/update", response_model=Position, tags=["Positions"])
+async def update_position(position: ProjectPosition):
+    position = await ProjectPositionRepository.upsert(position)
+    return position
+
+
+@position_router.put("/project-position/create", tags=["Positions"])
+async def create_position(position: ProjectPosition):
+    position = await ProjectPositionRepository.upsert(position)
+    return position
+
+
+@position_router.post("/internal-position/update", response_model=Position, tags=["Positions"])
+async def update_position(position: InternalPosition):
+    position = await InternalPositionRepository.upsert(position)
+    return position
+
+
+@position_router.put("/internal-position/create", tags=["Positions"])
+async def create_position(position: InternalPosition):
+    position = await InternalPositionRepository.upsert(position)
     return position
 
 

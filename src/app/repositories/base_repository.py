@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from pypika import Query
 from pypika.functions import Lower
 
-from app.errors.entity_already_exist_errors import EntityAlreadyExist
 from app.errors.entity_not_found_errors import EntityNotFound
 from app.utils.postgres import db_connection
 
@@ -26,6 +25,16 @@ class BaseRepository:
         pass
 
     @classmethod
+    @abstractmethod
+    def model_to_tuple(cls, model):
+        pass
+
+    @classmethod
+    @abstractmethod
+    async def upsert(cls, entity):
+        pass
+
+    @classmethod
     async def get_by_id(cls, id: int) -> Optional[BaseModel]:
         async with db_connection() as connection:
             record = await connection.fetchrow(f"SELECT * FROM {cls.TABLE_NAME} WHERE id={id};")
@@ -34,37 +43,6 @@ class BaseRepository:
                 raise EntityNotFound(message=f"{cls.ENTITY} with id {id} not found!")
 
             return cls.record_to_entity(record)
-
-    @classmethod
-    async def save(cls, entity) -> BaseModel:
-        async with db_connection() as connection:
-            try:
-                record = await cls._save(connection, entity)
-            except Exception:
-                raise EntityAlreadyExist(f"{cls.ENTITY.__name__} with id {entity.id} already exists")
-
-        return cls.record_to_entity(record)
-
-    @classmethod
-    @abstractmethod
-    async def _save(cls, connection, entity):
-        pass
-
-    @classmethod
-    async def update(cls, entity: BaseModel) -> BaseModel:
-        assert entity.id is not None
-        async with db_connection() as connection:
-            try:
-                record = await cls._update(connection, entity)
-            except Exception:
-                raise EntityNotFound(f"{cls.ENTITY.__name__} with id {entity.id} not found")
-
-        return cls.record_to_entity(record)
-
-    @classmethod
-    @abstractmethod
-    async def _update(cls, connection, entity):
-        pass
 
     @classmethod
     async def find_by_name(cls, limit: int, offset: int, query: str) -> List[BaseModel]:

@@ -21,5 +21,5 @@ class DocumentDivisionRepository:
                     ON xrfs.document_id = d.id
                 WHERE t.id = {division_id}
                 """
-            ).fetchall()
+            ).fetch()
             return [record.id for record in records]

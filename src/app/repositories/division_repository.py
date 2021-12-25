@@ -43,22 +43,29 @@ class DivisionRepository(BaseRepository):
             return divisions
 
     @classmethod
-    async def _save(cls, connection, division: Division):
-        records = await connection.fetchrow(
-            f"INSERT INTO {cls.TABLE_NAME} (status, name, lead_id) VALUES ($1, $2, $3) RETURNING *",
-            division.status,
-            division.name,
-            division.lead_id,
-        )
-        return records
+    async def upsert(cls, division: Division):
+        async with db_connection() as connection:
+            record = await connection.fetchrow(
+                f"""
+                    INSERT INTO {cls.TABLE_NAME}
+                    (status, name, lead_id)
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT (id) DO UPDATE SET
+                        status = EXCLUDED.status,
+                        name = EXCLUDED.name,
+                        lead_id = EXCLUDED.lead_id
+                    RETURNING *
+                    """,
+                *cls.model_to_tuple(division),
+            )
+
+        return cls.record_to_entity(record)
 
     @classmethod
-    async def _update(cls, connection, division: Division):
-        records = await connection.fetchrow(
-            f"UPDATE {cls.TABLE_NAME} SET status=$2, name=$3, lead_id=$4 WHERE id=$1 RETURNING *",
-            division.id,
-            division.status,
-            division.name,
-            division.lead_id,
-        )
-        return records
+    def model_to_tuple(cls, model):
+        return (model.status, model.name, model.lead_id)
+
+    @classmethod
+    def record_to_entity(cls, record) -> Division:
+        division = cls.ENTITY(id=record["id"], status=record["status"], name=record["name"], lead_id=record["lead_id"],)
+        return division

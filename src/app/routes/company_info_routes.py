@@ -20,7 +20,7 @@ async def get_company_info() -> CompanyInfoResponse:
     return response
 
 
-@company_info_router.put("/update", response_model=CompanyInfo, tags=["CompanyInfo"])
+@company_info_router.post("/update", response_model=CompanyInfo, tags=["CompanyInfo"])
 async def update_position(company_info: CompanyInfo):
-    company_info = await CompanyInfoRepository.update(company_info)
+    company_info = await CompanyInfoRepository.upsert(company_info)
     return company_info

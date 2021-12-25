@@ -42,13 +42,13 @@ async def search_teams(
     return teams
 
 
-@team_router.put("/update", response_model=Team, tags=["Team"])
+@team_router.post("/update", response_model=Team, tags=["Team"])
 async def update_position(team: Team):
-    team = await TeamRepository.update(team)
+    team = await TeamRepository.upsert(team)
     return team
 
 
-@team_router.post("/create", response_model=Team, tags=["Team"])
+@team_router.put("/create", response_model=Team, tags=["Team"])
 async def create_position(team: Team):
-    team = await TeamRepository.save(team)
+    team = await TeamRepository.upsert(team)
     return team

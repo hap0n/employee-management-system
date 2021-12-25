@@ -11,7 +11,7 @@ class EmployeeTeamRepository:
     @classmethod
     async def get_team_employees(cls, team_id: int) -> List[int]:
         async with db_connection() as connection:
-            records = await connection.fetchall(
+            records = await connection.fetch(
                 f"""
                 SELECT t.id as id
                 FROM {cls.TEAMS_TABLE_NAME} t

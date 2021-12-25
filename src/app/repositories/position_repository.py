@@ -18,29 +18,33 @@ class PositionRepository(BaseRepository):
 
     @classmethod
     def record_to_entity(cls, record):
-        position = Position(
-            id=record["id"],
-            status=record["status"],
-            name=record["name"],
-        )
+        position = Position(id=record["id"], status=record["status"], name=record["name"],)
         return position
 
     @classmethod
-    async def _save(cls, connection, position: Position):
-        records = await connection.fetchrow(
-            f"INSERT INTO {cls.TABLE_NAME} (status, name) VALUES ($1, $2) RETURNING *", position.status, position.name,
-        )
-        return records
+    async def upsert(cls, position: Position):
+        async with db_connection() as connection:
+            record = await connection.fetchrow(
+                f"""
+                    INSERT INTO {cls.TABLE_NAME}
+                    (status, name)
+                    VALUES ($1, $2)
+                    ON CONFLICT (id) DO UPDATE SET
+                        status = EXCLUDED.status,
+                        name = EXCLUDED.name
+                    RETURNING *
+                    """,
+                *cls.model_to_tuple(position),
+            )
+
+        return cls.record_to_entity(record)
 
     @classmethod
-    async def _update(cls, connection, position: Position):
-        records = await connection.fetchrow(
-            f"UPDATE {cls.TABLE_NAME} SET status=$2, name=$3 WHERE id=$1 RETURNING *",
-            position.id,
-            position.status,
-            position.name,
+    def model_to_tuple(cls, model):
+        return (
+            model.status,
+            model.name,
         )
-        return records
 
     @classmethod
     async def index(
